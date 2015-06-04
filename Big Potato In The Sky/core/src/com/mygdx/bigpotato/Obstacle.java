@@ -1,4 +1,4 @@
-package com.mygdx.flyingpotato;
+package com.mygdx.bigpotato;
 
 import com.badlogic.gdx.math.Rectangle;
 

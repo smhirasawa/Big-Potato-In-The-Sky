@@ -1,10 +1,10 @@
-package com.mygdx.flyingpotato.android;
+package com.mygdx.bigpotato.android;
 
 import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.mygdx.flyingpotato.MyGdxGame;
+import com.mygdx.bigpotato.MyGdxGame;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override
