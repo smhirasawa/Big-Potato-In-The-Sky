@@ -64,6 +64,8 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     private Array<Background> backgroundArray;
     final static int BACKGROUND_WIDTH = Gdx.graphics.getWidth()*3;
 
+    boolean startGame;
+
     MyGdxGame game;
 
     public GameScreen(MyGdxGame game, boolean fadeIn){
@@ -105,6 +107,13 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
             player.ascend();
             player.ascendSound.play();
             player.inAnimation = true;
+        }
+
+        //Wait for player to tap to begin game
+        System.out.println("touched");
+        if(!startGame && !fadeIn){
+            startGame = true;
+            gameMusic.play();
         }
 
         //When game is not active check for menu button clicks
@@ -169,13 +178,14 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         gameMusic =  Gdx.audio.newMusic(Gdx.files.internal("sounds/gameMusic.wav"));
 
         gameMusic.setLooping(true);
-        gameMusic.play();
 
         backgroundArray = new Array<Background>();
         Background background1 = new Background(new Texture("images/backgroundImage.png"), 0, -5, BACKGROUND_WIDTH, screenHeight+5);
         backgroundArray.add(background1);
         Background background2 = new Background(new Texture("images/backgroundImage.png"), background1.width, -5, BACKGROUND_WIDTH, screenHeight+5);
         backgroundArray.add(background2);
+
+        startGame = false;
 
         Gdx.input.setInputProcessor(this);
         spawnObstacle();
@@ -369,6 +379,8 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         else if(fadeIn)
             return false;
         else if(lostGame)
+            return false;
+        else if(!startGame)
             return false;
         else
             return true;
