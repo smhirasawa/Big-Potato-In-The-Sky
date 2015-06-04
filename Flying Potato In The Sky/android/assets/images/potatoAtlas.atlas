@@ -1,0 +1,38 @@
+
+potatoAtlas.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+player
+  rotate: false
+  xy: 1, 379
+  size: 751, 402
+  orig: 751, 402
+  offset: 0, 0
+  index: 3
+player
+  rotate: false
+  xy: 1, 1
+  size: 753, 376
+  orig: 753, 376
+  offset: 0, 0
+  index: 2
+player
+  rotate: false
+  xy: 1, 1
+  size: 753, 376
+  orig: 753, 376
+  offset: 0, 0
+  index: 4
+
+potatoAtlas2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+player
+  rotate: false
+  xy: 1, 1
+  size: 746, 375
+  orig: 746, 375
+  offset: 0, 0
+  index: 1
