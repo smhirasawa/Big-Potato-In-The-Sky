@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -34,6 +36,7 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     int playerScore;
     int scoreCheck;
     BitmapFont scoreDisplay;
+    BitmapFont.BitmapFontData scoreDisplayFontData;
     int difficulty;
 
     SpriteBatch batch;
@@ -66,6 +69,10 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
 
     boolean startGame;
 
+    FreeTypeFontGenerator fontGenerator;
+    FreeTypeFontGenerator.FreeTypeFontParameter fontParameter;
+    BitmapFont highScoreDisplay;
+
     MyGdxGame game;
 
     public GameScreen(MyGdxGame game, boolean fadeIn){
@@ -83,6 +90,7 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         player.dispose();
         gameMusic.dispose();
         itemSelect.dispose();
+        fontGenerator.dispose();
     }
 
     private void spawnObstacle(){
@@ -165,8 +173,13 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         playerScore = 0;
         scoreCheck = 0;
         difficulty = 1;
-        scoreDisplay = new BitmapFont(Gdx.files.internal("fonts/fonts.fnt"), false);
-        scoreDisplay.setColor(Color.BLACK);
+
+        fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Bitwise.ttf"));
+        fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        fontParameter.size = 100;
+        scoreDisplay = fontGenerator.generateFont(fontParameter);
+        highScoreDisplay = fontGenerator.generateFont(fontParameter);
+
         startTime = System.currentTimeMillis();
 
         screenFade = new TransitionManager();
@@ -235,8 +248,8 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
             batch.draw(obstacleImg, o.rect.x, o.rect.y, o.rect.width, o.rect.height);
         }
 
+        highScoreDisplay.draw(batch, "High Score: " + Integer.toString(game.getHighScore()), 0, screenHeight - screenHeight / 30);
         scoreDisplay.draw(batch, Integer.toString(playerScore), screenWidth / 2, screenHeight - screenHeight / 30);
-
         //Handles screen fade in from splash screen
         if(fadeIn){
             screenFade.fadeInScreen(batch);
@@ -257,9 +270,13 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         //Handles event for a lost game
         if(lostGame){
             gameMusic.stop();
-            //2 is a magic number that represents the time delay before drawing lossMenu
+            //1 is a magic number that represents the time delay before drawing lossMenu
             if(lossMenu.waitTime == 1) {
                 player.gameOverSound.play();
+                if(game.getHighScore() < playerScore){
+                    game.setHighScore(playerScore);
+                }
+                System.out.println("High Score: " + game.getHighScore());
             }
             lossMenu.waitTime -= Gdx.graphics.getDeltaTime();
             if(lossMenu.waitTime <= 0) {

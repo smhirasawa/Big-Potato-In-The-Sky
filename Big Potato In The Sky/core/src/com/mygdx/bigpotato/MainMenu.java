@@ -3,12 +3,15 @@ package com.mygdx.bigpotato;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Vector3;
 
 /**
@@ -19,6 +22,7 @@ public class MainMenu implements InputProcessor, Screen{
     int screenHeight;
     MyGdxGame game;
     TextureObj startButton;
+    TextureObj highScoreButton;
     TextureObj title;
     SpriteBatch batch;
     int startButtonWidth;
@@ -34,6 +38,10 @@ public class MainMenu implements InputProcessor, Screen{
     Music menuMusic;
 
     GameScreen gameScreen;
+
+    FreeTypeFontGenerator fontGenerator;
+    FreeTypeFontGenerator.FreeTypeFontParameter fontParameter;
+    BitmapFont highScoreDisplay;
 
     public MainMenu(MyGdxGame game, boolean fadeIn){
         this.game = game;
@@ -58,12 +66,19 @@ public class MainMenu implements InputProcessor, Screen{
         batch = new SpriteBatch();
         title = new TextureObj(new Texture(("images/title.png")), screenWidth/2 - screenWidth/4, screenHeight-screenHeight/3, screenWidth/2, screenHeight/4);
         startButton = new TextureObj(new Texture("images/startButton.png"), screenWidth/2 - startButtonWidth/2, screenHeight/4, startButtonWidth, startButtonHeight);
+        //highScoreButton = new TextureObj(new Texture("images/potato.png"), screenWidth/2 - startButtonWidth/2, screenHeight/8, startButtonWidth, startButtonHeight);
 
         itemSelect = Gdx.audio.newSound(Gdx.files.internal("sounds/itemSelect.wav"));
         menuMusic =  Gdx.audio.newMusic(Gdx.files.internal("sounds/menuMusic.wav"));
 
         menuMusic.setLooping(true);
         menuMusic.play();
+
+        fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Bitwise.ttf"));
+        fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        fontParameter.size = 100;
+        fontParameter.color = Color.BLACK;
+        highScoreDisplay = fontGenerator.generateFont(fontParameter);
 
         Gdx.input.setInputProcessor(this);
     }
@@ -79,6 +94,7 @@ public class MainMenu implements InputProcessor, Screen{
 
         batch.begin();
         batch.draw(title.sprite, title.x, title.y, title.width, title.height);
+        highScoreDisplay.draw(batch, "High Score: " + game.getHighScore(), title.x, title.y - title.height/2);
         batch.draw(startButton.sprite, startButton.x, startButton.y, startButton.width, startButton.height);
         if(fadeIn){
             screenFade.fadeInScreen(batch);
@@ -124,6 +140,8 @@ public class MainMenu implements InputProcessor, Screen{
         screenFade.transitionScreen.dispose();
         itemSelect.dispose();
         menuMusic.dispose();
+        fontGenerator.dispose();
+        highScoreDisplay.dispose();
     }
 
     /*-------------------Input Processor-------------------------*/
@@ -131,8 +149,8 @@ public class MainMenu implements InputProcessor, Screen{
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         Vector3 coords = new Vector3(screenX, screenY, 0);
         Vector3 unprojectedCoords = camera.unproject(coords);
-        if(startButton.x <= screenX && startButton.x + startButton.width >= screenX){
-            if(startButton.y <= unprojectedCoords.y && startButton.y + startButton.height >= unprojectedCoords.y) {
+        if(startButton.x <= screenX && startButton.x + startButton.width >= screenX) {
+            if (startButton.y <= unprojectedCoords.y && startButton.y + startButton.height >= unprojectedCoords.y) {
                 isTransitioning = true;
                 menuMusic.stop();
                 itemSelect.play();
