@@ -24,11 +24,9 @@ import java.util.Iterator;
 
 public class GameScreen extends ApplicationAdapter implements InputProcessor,Screen{
 
-    private final static long SPAWN_TIME = 1000000000;
+    private final static float SPAWN_TIME = 3.25f;
     private final static int DIFFICULTY_INCREASE_THRESHOLD = 100;
     private final static int MAX_DIFFICULTY = 24;
-    private final static int obstacleVelMin = 200;
-    private final static int obstacleVelMax = 800;
 
     Player player;
 
@@ -36,13 +34,11 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     int playerScore;
     int scoreCheck;
     BitmapFont scoreDisplay;
-    BitmapFont.BitmapFontData scoreDisplayFontData;
     int difficulty;
 
     SpriteBatch batch;
-    Texture obstacleImg;
-    long lastObstacleTime;
-    int timerCounter;
+    float lastObstacleTime;
+    float timerCounter;
     int spawnThreshold;
 
     private Array<Obstacle> obstacles;
@@ -84,7 +80,6 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     public void dispose() {
         batch.dispose();
         scoreDisplay.dispose();
-        obstacleImg.dispose();
         lossMenu.dispose();
         screenFade.transitionScreen.dispose();
         player.dispose();
@@ -99,9 +94,9 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         r.width = MathUtils.random(screenWidth/20, screenWidth/15);
         r.x = screenWidth;
         r.y = MathUtils.random(0, screenHeight - r.height);
-        Obstacle o = new Obstacle(r, MathUtils.random(obstacleVelMin, obstacleVelMax));
+        Obstacle o = new Obstacle();
         obstacles.add(o);
-        lastObstacleTime = TimeUtils.nanoTime();
+        lastObstacleTime = Gdx.graphics.getDeltaTime();
     }
 
     @Override
@@ -141,16 +136,6 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     }
 
     @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return false;
-    }
-
-    @Override
     public void show() {
         mainMenu = new MainMenu(game, true);
 
@@ -158,7 +143,6 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         camera.setToOrtho(false, screenWidth, screenHeight);
 
         batch = new SpriteBatch();
-        obstacleImg = new Texture("images/obstacle.png");
 
         player = new Player(new Texture("images/potato.png"), screenWidth/12, screenHeight/8);
 
@@ -245,7 +229,7 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
 
         //Renders each obstacle
         for(Obstacle o: obstacles){
-            batch.draw(obstacleImg, o.rect.x, o.rect.y, o.rect.width, o.rect.height);
+            o.draw(batch);
         }
 
         highScoreDisplay.draw(batch, "High Score: " + Integer.toString(game.getHighScore()), 0, screenHeight - screenHeight / 30);
@@ -291,12 +275,10 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         if(applyPhysics()) {
 
             //Timer to spawn new obstacles
-            if (TimeUtils.nanoTime() - lastObstacleTime > SPAWN_TIME) {
-                if (timerCounter >= spawnThreshold) {
-                    spawnObstacle();
-                    timerCounter = 0;
-                }
-                timerCounter++;
+            timerCounter += Gdx.graphics.getDeltaTime();
+            if (timerCounter > SPAWN_TIME) {
+                spawnObstacle();
+                timerCounter = 0;
             }
 
             //Makes background scroll and "wrap"
@@ -313,17 +295,18 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
             Iterator<Obstacle> iter = obstacles.iterator();
             while (iter.hasNext()) {
                 Obstacle obstacle = iter.next();
-                obstacle.rect.x -= obstacle.velocity * Gdx.graphics.getDeltaTime();
-                if (obstacle.rect.x + obstacle.rect.width < 0) {
-                    iter.remove();
-                }
+                obstacle.update();
                 Rectangle actor = new Rectangle();
                 actor.setX(player.playerSprite.getX());
                 actor.setY(player.playerSprite.getY());
                 actor.setWidth(player.width);
                 actor.setHeight(player.height);
-                if (obstacle.rect.overlaps(actor)) {
+                if (obstacle.collisionCheck(actor)) {
                     lostGame = true;
+                }
+                if (obstacle.clearToRemove()) {
+                    iter.remove();
+                    obstacle.dispose();
                 }
             }
 
@@ -358,9 +341,32 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
         }
     }
 
+    public boolean applyPhysics(){
+        if(isTransitioning)
+            return false;
+        else if(fadeIn)
+            return false;
+        else if(lostGame)
+            return false;
+        else if(!startGame)
+            return false;
+        else
+            return true;
+    }
+
     @Override
     public void hide() {
         this.dispose();
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
     }
 
     /*--------------NOT USED FOR ANDROID-----------------------*/
@@ -390,16 +396,4 @@ public class GameScreen extends ApplicationAdapter implements InputProcessor,Scr
     }
     /*--------------NOT USED FOR ANDROID END-----------------------*/
 
-    public boolean applyPhysics(){
-        if(isTransitioning)
-            return false;
-        else if(fadeIn)
-            return false;
-        else if(lostGame)
-            return false;
-        else if(!startGame)
-            return false;
-        else
-            return true;
-    }
 }
